@@ -1,2 +1,6 @@
 # ARM_LED_APP
-The code for the website behind the wireless mesh LED 
+These are the softwares/plugins that we are required to run this application:
+
+node.js
+react+vite
+mysql
