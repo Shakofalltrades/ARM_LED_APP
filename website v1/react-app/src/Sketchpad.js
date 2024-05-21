@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Sketchpad.css";
 
 const Sketchpad = ({ setActivePage }) => {
@@ -9,6 +10,8 @@ const Sketchpad = ({ setActivePage }) => {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [grid, setGrid] = useState(Array(16).fill().map(() => Array(16).fill("#ffffff")));
   const [filled, setFilled] = useState(Array(16).fill().map(() => Array(16).fill(false)));
+  const [frames, setFrames] = useState([]);
+  const navigate = useNavigate();
 
   const drawGrid = useCallback(() => {
     const canvas = canvasRef.current;
@@ -49,10 +52,18 @@ const Sketchpad = ({ setActivePage }) => {
     const col = Math.floor(x / cellSize);
     const row = Math.floor(y / cellSize);
 
-    const newGrid = [...grid];
-    const newFilled = [...filled];
-    newGrid[row][col] = isErasing ? backgroundColor : penColor;
-    newFilled[row][col] = !isErasing;
+    const newGrid = grid.map((rowArray, rowIndex) =>
+      rowArray.map((cell, colIndex) =>
+        rowIndex === row && colIndex === col ? (isErasing ? backgroundColor : penColor) : cell
+      )
+    );
+
+    const newFilled = filled.map((rowArray, rowIndex) =>
+      rowArray.map((cell, colIndex) =>
+        rowIndex === row && colIndex === col ? !isErasing : cell
+      )
+    );
+
     setGrid(newGrid);
     setFilled(newFilled);
   };
@@ -61,9 +72,14 @@ const Sketchpad = ({ setActivePage }) => {
     setIsErasing(!isErasing);
   };
 
-  const clearCanvas = () => {
+  const clearSketchpad = () => {
     setGrid(Array(16).fill().map(() => Array(16).fill(backgroundColor)));
     setFilled(Array(16).fill().map(() => Array(16).fill(false)));
+  };
+
+  const newAnimationSequence = () => {
+    setFrames([]); // Clear the frames array
+    clearSketchpad();
   };
 
   const handleColorChange = (e) => {
@@ -74,17 +90,19 @@ const Sketchpad = ({ setActivePage }) => {
   const handleBackgroundColorChange = (e) => {
     const newBackgroundColor = e.target.value;
     setBackgroundColor(newBackgroundColor);
-    const newGrid = grid.map((row, rowIndex) => 
+    const newGrid = grid.map((row, rowIndex) =>
       row.map((cell, colIndex) => filled[rowIndex][colIndex] ? cell : newBackgroundColor)
     );
     setGrid(newGrid);
   };
 
   const doneDrawing = () => {
-    generateAndDownloadImage();
+    const frame = generateImage();
+    setFrames([...frames, frame]);
+    downloadFrame(frame, `drawing-${frames.length + 1}.png`);
   };
 
-  const generateAndDownloadImage = () => {
+  const generateImage = () => {
     const resizedCanvas = document.createElement("canvas");
     const resizedContext = resizedCanvas.getContext("2d");
 
@@ -100,17 +118,29 @@ const Sketchpad = ({ setActivePage }) => {
     }
 
     // Create a data URL from the resized canvas
-    const dataURL = resizedCanvas.toDataURL("image/png");
+    return resizedCanvas.toDataURL("image/png");
+  };
 
-    // Create a link element for downloading
+  const downloadFrame = (frame, filename) => {
     const link = document.createElement("a");
-    link.href = dataURL;
-    link.download = "drawing-16x16.png";
+    link.href = frame;
+    link.download = filename;
 
     // Append the link to the body, click it to trigger download, and remove it
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const downloadAllFrames = () => {
+    frames.forEach((frame, index) => {
+      downloadFrame(frame, `animation-frame-${index + 1}.png`);
+    });
+  };
+
+  const animateAndNavigate = () => {
+    downloadAllFrames();
+    navigate("/animation", { state: { frames } });
   };
 
   return (
@@ -131,11 +161,15 @@ const Sketchpad = ({ setActivePage }) => {
             <li>Click and drag on the grid to color each pixel</li>
             <li>Choose the pen color</li>
             <li>Choose the background color</li>
-            <li>When your drawing is complete, click Done</li>
-            <li>Click Download to save a 16x16 PNG of your drawing</li>
+            <li>When your drawing is complete, click Done to save the frame</li>
+            <li>Click Animate to download all frames for animation and view animation</li>
+            <li>Click Clear Sketchpad to clear the canvas</li>
+            <li>Click New Animation Sequence to start a new animation sequence</li>
           </ol>
           <div className="instruction-buttons">
             <button className="button" onClick={doneDrawing}>Done</button>
+            <button className="button" onClick={animateAndNavigate}>Animate</button>
+            <button className="button" onClick={newAnimationSequence}>New Animation Sequence</button>
           </div>
         </div>
       </div>
@@ -146,16 +180,18 @@ const Sketchpad = ({ setActivePage }) => {
           onChange={handleColorChange}
           title="Choose pen color"
         />
+        <label>Pen Color</label>
         <input
           type="color"
           value={backgroundColor}
           onChange={handleBackgroundColorChange}
           title="Choose background color"
         />
+        <label>Background Color</label>
         <button className="button" onClick={toggleEraser}>
           {isErasing ? "Switch to Pen" : "Switch to Eraser"}
         </button>
-        <button className="button" onClick={clearCanvas}>Clear</button>
+        <button className="button" onClick={clearSketchpad}>Clear Sketchpad</button>
       </div>
       <button className="home-button" onClick={() => setActivePage("Home")}>
         Return to Home Page

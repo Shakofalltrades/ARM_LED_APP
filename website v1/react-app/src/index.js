@@ -1,13 +1,19 @@
-//index.js
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
+import AnimationDisplay from "./AnimationDisplay";
 import reportWebVitals from "./reportWebVitals";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/animation" element={<AnimationDisplay />} />
+      </Routes>
+    </Router>
   </React.StrictMode>,
   document.getElementById("root")
 );
