@@ -96,10 +96,30 @@ const Sketchpad = ({ setActivePage }) => {
     setGrid(newGrid);
   };
 
-  const doneDrawing = () => {
+  const doneDrawing = async () => {
     const frame = generateImage();
     setFrames([...frames, frame]);
-    downloadFrame(frame, `drawing-${frames.length + 1}.png`);
+    const blob = await ((await fetch(frame)).blob());
+    uploadImage(blob, `drawing-${frames.length + 1}.png`);
+  };
+
+  const uploadImage = async (blob, filename) => {
+    const formData = new FormData();
+    formData.append('file',blob,filename);
+
+    try {
+      const response = await fetch('http://localhost:5000/upload',{
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok){
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json()
+      console.log('Image uploaded successfully', data);
+    } catch (error){
+      console.error('Error uploading image',error);
+    }
   };
 
   const generateImage = () => {
