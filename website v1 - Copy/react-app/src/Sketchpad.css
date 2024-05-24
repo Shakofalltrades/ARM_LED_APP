@@ -1,0 +1,81 @@
+.sketchpad-container {
+  text-align: center;
+  margin: 20px;
+}
+
+.sketchpad-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.sketchpad-canvas {
+  border: 1px solid #000;
+  cursor: crosshair;
+  width: 320px;  /* Scale the canvas up */
+  height: 320px; /* Scale the canvas up */
+  image-rendering: pixelated; /* Ensure crisp rendering for pixel art */
+}
+
+.instructions {
+  max-width: 300px;
+  text-align: left;
+}
+
+.instructions ol {
+  padding-left: 20px;
+}
+
+.instructions ol li {
+  margin-bottom: 10px;
+  white-space: nowrap; /* Prevent line breaks within list items */
+}
+
+.instructions .instruction-buttons {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.controls {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.controls input[type="color"] {
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.button {
+  background-color: #61dafb;
+  border: none;
+  color: black;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.button:hover {
+  background-color: #21a1f1;
+}
+
+.home-button {
+  background-color: #61dafb;
+  border: none;
+  color: black;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.home-button:hover {
+  background-color: #21a1f1;
+}
+
