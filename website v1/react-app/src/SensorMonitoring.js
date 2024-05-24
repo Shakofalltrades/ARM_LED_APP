@@ -24,7 +24,7 @@ function SensorMonitoring({ setActivePage }) {
   return (
     <div className="sensor-monitoring-container">
       <div className="input-container">
-        <label htmlFor="numNodes">Number of Nodes:</label>
+        <label htmlFor="numNodes">Number of Nodes: 60</label>
         <input
           type="number"
           id="numNodes"
