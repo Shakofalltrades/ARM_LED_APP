@@ -1,13 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import "./AnimationDisplay.css";
 
-const AnimationDisplay = () => {
-  const { state } = useLocation();
-  const { frames } = state;
+const AnimationDisplay = ({ setActivePage, frames }) => {
   const canvasRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
-  const navigate = useNavigate();
   const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
@@ -40,7 +36,7 @@ const AnimationDisplay = () => {
 
   const returnToSketchpad = () => {
     clearInterval(intervalId);
-    navigate("/sketchpad");
+    setActivePage("Sketchpad");
   };
 
   return (

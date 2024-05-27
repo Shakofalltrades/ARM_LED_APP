@@ -11,6 +11,7 @@ const Sketchpad = ({ setActivePage }) => {
   const [grid, setGrid] = useState(Array(16).fill().map(() => Array(16).fill("#ffffff")));
   const [filled, setFilled] = useState(Array(16).fill().map(() => Array(16).fill(false)));
   const [frames, setFrames] = useState([]);
+  const [message, setMessage] = useState(""); // New state for message
   const navigate = useNavigate();
 
   const drawGrid = useCallback(() => {
@@ -101,6 +102,8 @@ const Sketchpad = ({ setActivePage }) => {
     setFrames([...frames, frame]);
     const blob = await ((await fetch(frame)).blob());
     uploadImage(blob, `drawing-${frames.length + 1}.png`);
+    setMessage("Your frame has been saved!"); // Set the message
+    setTimeout(() => setMessage(""), 3000); // Clear the message after 3 seconds
   };
 
   const uploadImage = async (blob, filename) => {
@@ -166,6 +169,9 @@ const Sketchpad = ({ setActivePage }) => {
   return (
     <div className="sketchpad-container">
       <div className="sketchpad-content">
+        <div className="message-container">
+          {message && <div className="message">{message}</div>} {/* Display message */}
+        </div>
         <canvas
           ref={canvasRef}
           width="320"
