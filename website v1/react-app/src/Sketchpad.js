@@ -111,7 +111,7 @@ const Sketchpad = ({ setActivePage }) => {
     formData.append('file', blob, filename);
   
     try {
-      const response = await fetch('http://localhost:5000/uploads', {
+      const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
         body: formData,
       });

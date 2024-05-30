@@ -55,7 +55,7 @@ app.post('/upload', upload.single('file'), (req,res) => {
     const sql = 'INSERT INTO test (id,frames) VALUES (?, ?)';
     const values = [file.originalname, file.buffer];
 
-    connection.query(sql, values, (err, result) => {
+    con.query(sql, values, (err, result) => {
         if (err) throw err;
         res.send({message: 'File uploaded and saved to database', id: result.insertId});
     });
