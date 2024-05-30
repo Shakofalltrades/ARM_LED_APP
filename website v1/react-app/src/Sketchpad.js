@@ -108,23 +108,26 @@ const Sketchpad = ({ setActivePage }) => {
 
   const uploadImage = async (blob, filename) => {
     const formData = new FormData();
-    formData.append('file',blob,filename);
-
+    formData.append('file', blob, filename);
+  
     try {
-      const response = await fetch('http://localhost:5000/upload',{
+      const response = await fetch('http://localhost:5000/uploads', {
         method: 'POST',
         body: formData,
       });
-      if (!response.ok){
-        throw new Error('Network response was not ok');
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
       }
-      const data = await response.json()
+      const data = await response.json();
       console.log('Image uploaded successfully', data);
-    } catch (error){
-      console.error('Error uploading image',error);
+      setMessage("Image uploaded successfully!"); // Update the message state
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setMessage(`Error uploading image: ${error.message}`); // Update the message state to display the error
+      setTimeout(() => setMessage(""), 5000); // Clear the message after 5 seconds
     }
   };
-
+  
   const generateImage = () => {
     const resizedCanvas = document.createElement("canvas");
     const resizedContext = resizedCanvas.getContext("2d");
