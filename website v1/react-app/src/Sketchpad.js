@@ -107,6 +107,7 @@ const Sketchpad = ({ setActivePage }) => {
   };
 
   const uploadImage = async (blob, filename) => {
+    // form data is an element that can contain input elements
     const formData = new FormData();
     formData.append('file', blob, filename);
   
@@ -124,7 +125,7 @@ const Sketchpad = ({ setActivePage }) => {
     } catch (error) {
       console.error('Error uploading image:', error);
       setMessage(`Error uploading image: ${error.message}`); // Update the message state to display the error
-      setTimeout(() => setMessage(""), 5000); // Clear the message after 5 seconds
+      //setTimeout(() => setMessage(""), 5000); // Clear the message after 5 seconds
     }
   };
   
