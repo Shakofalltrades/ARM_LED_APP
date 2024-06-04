@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import PropTypes from 'prop-types';
 import "./AnimationDisplay.css";
 
-const AnimationDisplay = ({ setActivePage, frames }) => {
+const AnimationDisplay = ({ setActivePage, frames, animationName }) => {
   const canvasRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
@@ -24,10 +25,17 @@ const AnimationDisplay = ({ setActivePage, frames }) => {
       frameIndex = (frameIndex + 1) % frames.length;
     };
 
-    const id = setInterval(drawFrame, 120); // 120ms per frame
-    setIntervalId(id);
+    let id;
+    if (frames.length > 0) {
+      id = setInterval(drawFrame, 120); // 120ms per frame
+      setIntervalId(id);
+    }
 
-    return () => clearInterval(id);
+    return () => {
+      if (id) {
+        clearInterval(id);
+      }
+    };
   }, [frames, isPaused]);
 
   const togglePause = () => {
@@ -35,13 +43,16 @@ const AnimationDisplay = ({ setActivePage, frames }) => {
   };
 
   const returnToSketchpad = () => {
-    clearInterval(intervalId);
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
     setActivePage("Sketchpad");
   };
 
   return (
     <div className="animation-page">
       <header className="animation-header">Animation Display</header>
+      <h2>{animationName}</h2> {/* Display the animation name */}
       <div className="animation-container">
         <canvas
           ref={canvasRef}
@@ -60,6 +71,12 @@ const AnimationDisplay = ({ setActivePage, frames }) => {
       <footer className="animation-footer">Footer Content Here</footer>
     </div>
   );
+};
+
+AnimationDisplay.propTypes = {
+  setActivePage: PropTypes.func.isRequired,
+  frames: PropTypes.array.isRequired,
+  animationName: PropTypes.string.isRequired, // Add prop type for animation name
 };
 
 export default AnimationDisplay;
