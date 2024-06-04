@@ -1,8 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import "./Sketchpad.css";
 
-const Sketchpad = ({ setActivePage }) => {
+const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   const canvasRef = useRef(null);
   const [drawing, setDrawing] = useState(false);
   const [isErasing, setIsErasing] = useState(false);
@@ -11,8 +10,8 @@ const Sketchpad = ({ setActivePage }) => {
   const [grid, setGrid] = useState(Array(16).fill().map(() => Array(16).fill("#ffffff")));
   const [filled, setFilled] = useState(Array(16).fill().map(() => Array(16).fill(false)));
   const [frames, setFrames] = useState([]);
-  const [message, setMessage] = useState(""); // New state for message
-  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+  const [animationName, setAnimationName] = useState(""); // New state for animation name
 
   const drawGrid = useCallback(() => {
     const canvas = canvasRef.current;
@@ -79,13 +78,13 @@ const Sketchpad = ({ setActivePage }) => {
   };
 
   const newAnimationSequence = () => {
-    setFrames([]); // Clear the frames array
+    setFrames([]);
     clearSketchpad();
   };
 
   const handleColorChange = (e) => {
     setPenColor(e.target.value);
-    setIsErasing(false); // Ensure eraser is turned off when color is selected
+    setIsErasing(false);
   };
 
   const handleBackgroundColorChange = (e) => {
@@ -97,38 +96,14 @@ const Sketchpad = ({ setActivePage }) => {
     setGrid(newGrid);
   };
 
-  const doneDrawing = async () => {
+  const doneDrawing = () => {
     const frame = generateImage();
     setFrames([...frames, frame]);
-    const blob = await ((await fetch(frame)).blob());
-    uploadImage(blob, `drawing-${frames.length + 1}.png`);
-    setMessage("Your frame has been saved!"); // Set the message
-    setTimeout(() => setMessage(""), 3000); // Clear the message after 3 seconds
+    setAnimationFrames([...frames, frame]); // Update the parent state
+    setMessage("Your frame has been saved!");
+    setTimeout(() => setMessage(""), 3000);
   };
 
-  const uploadImage = async (blob, filename) => {
-    // form data is an element that can contain input elements
-    const formData = new FormData();
-    formData.append('file', blob, filename);
-  
-    try {
-      const response = await fetch('http://localhost:5000/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.statusText}`);
-      }
-      const data = await response.json();
-      console.log('Image uploaded successfully', data);
-      setMessage("Image uploaded successfully!"); // Update the message state
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setMessage(`Error uploading image: ${error.message}`); // Update the message state to display the error
-      //setTimeout(() => setMessage(""), 5000); // Clear the message after 5 seconds
-    }
-  };
-  
   const generateImage = () => {
     const resizedCanvas = document.createElement("canvas");
     const resizedContext = resizedCanvas.getContext("2d");
@@ -136,7 +111,6 @@ const Sketchpad = ({ setActivePage }) => {
     resizedCanvas.width = 16;
     resizedCanvas.height = 16;
 
-    // Draw the grid onto the resized canvas
     for (let row = 0; row < 16; row++) {
       for (let col = 0; col < 16; col++) {
         resizedContext.fillStyle = grid[row][col];
@@ -144,37 +118,28 @@ const Sketchpad = ({ setActivePage }) => {
       }
     }
 
-    // Create a data URL from the resized canvas
     return resizedCanvas.toDataURL("image/png");
   };
 
-  const downloadFrame = (frame, filename) => {
-    const link = document.createElement("a");
-    link.href = frame;
-    link.download = filename;
-
-    // Append the link to the body, click it to trigger download, and remove it
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const downloadAllFrames = () => {
-    frames.forEach((frame, index) => {
-      downloadFrame(frame, `animation-frame-${index + 1}.png`);
-    });
+  const handleNameChange = (e) => {
+    setAnimationName(e.target.value);
   };
 
   const animateAndNavigate = () => {
-    downloadAllFrames();
-    navigate("/animation", { state: { frames } });
+    if (animationName.trim() === "") {
+      setMessage("Please enter a name for your animation.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+    setAnimationFrames(frames); // Update the parent state
+    setActivePage("AnimationDisplay");
   };
 
   return (
     <div className="sketchpad-container">
       <div className="sketchpad-content">
         <div className="message-container">
-          {message && <div className="message">{message}</div>} {/* Display message */}
+          {message && <div className="message">{message}</div>}
         </div>
         <canvas
           ref={canvasRef}
@@ -198,6 +163,13 @@ const Sketchpad = ({ setActivePage }) => {
           </ol>
           <div className="instruction-buttons">
             <button className="button" onClick={doneDrawing}>Done</button>
+            <input
+              type="text"
+              placeholder="Enter animation name"
+              value={animationName}
+              onChange={handleNameChange}
+              className="animation-name-input"
+            />
             <button className="button" onClick={animateAndNavigate}>Animate</button>
             <button className="button" onClick={newAnimationSequence}>New Animation Sequence</button>
           </div>
