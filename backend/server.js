@@ -14,6 +14,8 @@ app.use(cors({
   methods: ['POST']
 }));
 
+app.use(express.json());
+
 // Convert import.meta.url to __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +25,22 @@ const uploadDir = path.join(__dirname, 'upload');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+// Function to clear the upload directory
+const clearUploadDir = () => {
+  fs.readdir(uploadDir, (err, files) => {
+    if (err) throw err;
+
+    for (const file of files) {
+      fs.unlink(path.join(uploadDir, file), err => {
+        if (err) throw err;
+      });
+    }
+  });
+};
+
+// Clear the upload directory
+clearUploadDir();
 
 // File upload using multer
 const storage = multer.diskStorage({
@@ -48,28 +66,40 @@ con.connect((err) => {
   console.log('Connected to MySQL animations database');
 });
 
-app.post('/upload', upload.single('file'), (req, res) => {
+app.post('/createTable', (req, res) => {
+  const { animationName } = req.body;
+  const sql = `CREATE TABLE ?? (id INT AUTO_INCREMENT PRIMARY KEY, frame LONGBLOB)`;
+  con.query(sql, [animationName], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).send('Error creating table.');
+    }
+    res.send({ message: 'Table created successfully' });
+  });
+});
+
+app.post('/uploadFrame', upload.single('file'), (req, res) => {
   const file = req.file;
+  const { animationName } = req.body;
+
   if (!file) {
     return res.status(400).send('No file uploaded.');
   }
 
-
-  // Read the file from the filesystem
   fs.readFile(file.path, (err, data) => {
     if (err) {
       return res.status(500).send('Error reading the file.');
     }
 
-    const sql = 'INSERT INTO test (frame) VALUES (?)';
-    const values = [data];
+    const sql = 'INSERT INTO ?? (frame) VALUES (?)';
+    const values = [animationName, data];
 
     con.query(sql, values, (err, result) => {
       if (err) {
         console.log(err);
         return res.status(500).send('Error saving to the database.');
       }
-      res.send({ message: 'File uploaded and saved to database', id: result.insertId });
+      res.send({ message: 'Frame uploaded and saved to database', id: result.insertId });
     });
   });
 });
