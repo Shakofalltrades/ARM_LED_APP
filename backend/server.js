@@ -55,9 +55,9 @@ const upload = multer({ storage: storage });
 
 // MySQL connection
 const con = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'armled',
+  host: 'arm.cvcoiqug200c.us-east-1.rds.amazonaws.com',
+  user: 'imperial',
+  password: 'armled24',
   database: 'animations'
 });
 
