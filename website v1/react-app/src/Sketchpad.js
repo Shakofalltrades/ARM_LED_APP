@@ -96,12 +96,11 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     setGrid(newGrid);
   };
 
-  const doneDrawing = () => {
+  const doneDrawing = async () => {
     const frame = generateImage();
     setFrames([...frames, frame]);
-    setAnimationFrames([...frames, frame]); // Update the parent state
-    setMessage("Your frame has been saved!");
-    setTimeout(() => setMessage(""), 3000);
+    setMessage("Your frame has been saved!"); // Set the message
+    setTimeout(() => setMessage(""), 3000); // Clear the message after 3 seconds
   };
 
   const generateImage = () => {
@@ -125,12 +124,59 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     setAnimationName(e.target.value);
   };
 
-  const animateAndNavigate = () => {
+  const animateAndNavigate = async () => {
     if (animationName.trim() === "") {
       setMessage("Please enter a name for your animation.");
       setTimeout(() => setMessage(""), 3000);
       return;
     }
+
+    // in here goes the upload code
+    try {
+      const response = await fetch('http://localhost:5000/createTable', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ animationName }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error creating table');
+      }
+
+      const data = await response.json();
+      console.log(data.message);
+    } catch (error) {
+      setMessage(`Error: ${error.message}`);
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    for (const frame of frames) {
+      const blob = await (await fetch(frame)).blob();
+      const formData = new FormData();
+      formData.append('file', blob, `drawing-${frames.indexOf(frame) + 1}.png`);
+      formData.append('animationName', animationName);
+
+      try {
+        const response = await fetch('http://localhost:5000/uploadFrame', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Error uploading frame');
+        }
+
+        const data = await response.json();
+        console.log('Frame uploaded successfully', data);
+      } catch (error) {
+        setMessage(`Error uploading frame: ${error.message}`);
+        setTimeout(() => setMessage(""), 3000);
+      }
+    }
+
     setAnimationFrames(frames); // Update the parent state
     setActivePage("AnimationDisplay");
   };

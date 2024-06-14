@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import PropTypes from 'prop-types';
 import "./AnimationDisplay.css";
 
-const AnimationDisplay = ({ setActivePage, frames, animationName }) => {
+const AnimationDisplay = ({ setActivePage, animationFrames, animationName }) => {
   const canvasRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
+    if (animationFrames.length === 0) return;
+
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
@@ -16,27 +18,22 @@ const AnimationDisplay = ({ setActivePage, frames, animationName }) => {
     const drawFrame = () => {
       if (isPaused) return;
       const img = new Image();
-      img.src = frames[frameIndex];
+      img.src = animationFrames[frameIndex];
       img.onload = () => {
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(img, 0, 0, canvas.width, canvas.height);
       };
 
-      frameIndex = (frameIndex + 1) % frames.length;
+      frameIndex = (frameIndex + 1) % animationFrames.length;
     };
 
-    let id;
-    if (frames.length > 0) {
-      id = setInterval(drawFrame, 120); // 120ms per frame
-      setIntervalId(id);
-    }
+    const id = setInterval(drawFrame, 120); // 120ms per frame
+    setIntervalId(id);
 
     return () => {
-      if (id) {
-        clearInterval(id);
-      }
+      clearInterval(id);
     };
-  }, [frames, isPaused]);
+  }, [animationFrames, isPaused]);
 
   const togglePause = () => {
     setIsPaused(!isPaused);
@@ -75,7 +72,7 @@ const AnimationDisplay = ({ setActivePage, frames, animationName }) => {
 
 AnimationDisplay.propTypes = {
   setActivePage: PropTypes.func.isRequired,
-  frames: PropTypes.array.isRequired,
+  animationFrames: PropTypes.arrayOf(PropTypes.string).isRequired,
   animationName: PropTypes.string.isRequired, // Add prop type for animation name
 };
 

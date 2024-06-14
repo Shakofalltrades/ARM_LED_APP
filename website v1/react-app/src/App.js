@@ -10,11 +10,7 @@ import AnimationDisplay from "./AnimationDisplay";
 function App() {
   const [activePage, setActivePage] = useState("Home");
   const [animationFrames, setAnimationFrames] = useState([]);
-  const [animationName, setAnimationName] = useState(""); // New state for animation name
-
-  console.log("Rendering App component");
-  console.log("activePage:", activePage);
-  console.log("setActivePage:", setActivePage);
+  const [animationName, setAnimationName] = useState("");
 
   let content;
   if (activePage === "Home") {
@@ -22,9 +18,21 @@ function App() {
   } else if (activePage === "SensorMonitoring") {
     content = <SensorMonitoring setActivePage={setActivePage} />;
   } else if (activePage === "Sketchpad") {
-    content = <Sketchpad setActivePage={setActivePage} setAnimationFrames={setAnimationFrames} setAnimationName={setAnimationName} />; // Pass setAnimationName
+    content = (
+      <Sketchpad 
+        setActivePage={setActivePage} 
+        setAnimationFrames={setAnimationFrames} 
+        setAnimationName={setAnimationName} 
+      />
+    );
   } else if (activePage === "AnimationDisplay") {
-    content = <AnimationDisplay setActivePage={setActivePage} frames={animationFrames} animationName={animationName} />; // Pass animationName
+    content = (
+      <AnimationDisplay 
+        setActivePage={setActivePage} 
+        animationFrames={animationFrames} 
+        animationName={animationName} 
+      />
+    );
   }
 
   return (
