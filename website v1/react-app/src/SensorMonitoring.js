@@ -3,7 +3,7 @@ import "./SensorMonitoring.css";
 
 function SensorMonitoring({ setActivePage }) {
   const [numNodes, setNumNodes] = useState(1);
-  const [nodes, setNodes] = useState(Array(1).fill({ section: null, data: null }));
+  const [nodes, setNodes] = useState(Array(1).fill({ section: null, data: null, nodeId: null }));
   const ws = useRef(null);
 
   useEffect(() => {
@@ -14,12 +14,36 @@ function SensorMonitoring({ setActivePage }) {
     };
 
     ws.current.onmessage = (event) => {
+      console.log('Message from server:', event.data);
       const message = JSON.parse(event.data);
-      if (message.type === 'temperature') {
-        setNodes((prevNodes) => prevNodes.map((node) => 
-          node.section === 'Temperature' ? { ...node, data: message.value } : node
-        ));
-      }
+
+      setNodes((prevNodes) => {
+        const nodeIndex = prevNodes.findIndex((node) => node.nodeId === message.nodeId);
+        if (nodeIndex !== -1) {
+          const updatedNodes = [...prevNodes];
+          let data = updatedNodes[nodeIndex].data;
+          if (updatedNodes[nodeIndex].section === 'Temperature' && message.temperature !== undefined) {
+            data = `The temperature is ${message.temperature}ºC.`;
+          } else if (updatedNodes[nodeIndex].section === 'Humidity' && message.humidity !== undefined) {
+            data = `The humidity is ${message.humidity}%.`;
+          }
+          updatedNodes[nodeIndex] = { ...updatedNodes[nodeIndex], data, nodeId: message.nodeId };
+          return updatedNodes;
+        } else {
+          return prevNodes.map((node, index) => {
+            if (node.nodeId === null) {
+              let data = node.data;
+              if (node.section === 'Temperature' && message.temperature !== undefined) {
+                data = `The temperature is ${message.temperature}ºC.`;
+              } else if (node.section === 'Humidity' && message.humidity !== undefined) {
+                data = `The humidity is ${message.humidity}%.`;
+              }
+              return { ...node, data, nodeId: message.nodeId };
+            }
+            return node;
+          });
+        }
+      });
     };
 
     ws.current.onclose = () => {
@@ -34,7 +58,7 @@ function SensorMonitoring({ setActivePage }) {
   const handleNumNodesChange = (e) => {
     const value = parseInt(e.target.value, 10);
     setNumNodes(value);
-    setNodes(Array(value).fill({ section: null, data: null }));
+    setNodes(Array(value).fill({ section: null, data: null, nodeId: null }));
   };
 
   const handleSectionChange = (index, section) => {
@@ -43,7 +67,13 @@ function SensorMonitoring({ setActivePage }) {
   };
 
   const handleReset = () => {
-    setNodes(Array(numNodes).fill({ section: null, data: null }));
+    setNodes(Array(numNodes).fill({ section: null, data: null, nodeId: null }));
+  };
+
+  const handleSendCommand = (command) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ command }));
+    }
   };
 
   return (
@@ -64,24 +94,32 @@ function SensorMonitoring({ setActivePage }) {
             <th>Node</th>
             <th>Sensor Type</th>
             <th>Sensor Data</th>
+            <th>Controls</th>
           </tr>
         </thead>
         <tbody>
           {nodes.map((node, index) => (
             <tr key={index}>
-              <td>Node {index + 1}</td>
+              <td>
+                {node.nodeId ? `Node ID: ${node.nodeId}` : `Node ${index + 1}`}
+              </td>
               <td>
                 <nav>
                   <button className="sensor-button" onClick={() => handleSectionChange(index, "Temperature")}>Temperature</button>
-                  <button className="sensor-button" onClick={() => handleSectionChange(index, "Motion")}>Motion</button>
                   <button className="sensor-button" onClick={() => handleSectionChange(index, "Humidity")}>Humidity</button>
                 </nav>
               </td>
               <td>
-                {node.section === "Temperature" && <p>{node.data !== null ? `The temperature is ${node.data}ºC.` : "Loading..."}</p>}
-                {node.section === "Motion" && <p>There is no motion detected.</p>}
-                {node.section === "Humidity" && <p>There is a low humidity.</p>}
+                {node.section === "Temperature" && <p>{node.data !== null ? node.data : "Loading..."}</p>}
+                {node.section === "Humidity" && <p>{node.data !== null ? node.data : "Loading..."}</p>}
                 {node.section === null && <p>No sensor selected.</p>}
+              </td>
+              <td>
+                <button className="control-button" onClick={() => handleSendCommand('p')}>Pause</button>
+                <button className="control-button" onClick={() => handleSendCommand('r')}>Resume</button>
+                <button className="control-button" onClick={() => handleSendCommand('t')}>Toggle</button>
+                <button className="control-button" onClick={() => handleSendCommand('s')}>Sensor</button>
+                <button className="control-button" onClick={() => handleSendCommand('a')}>Animate</button>
               </td>
             </tr>
           ))}
