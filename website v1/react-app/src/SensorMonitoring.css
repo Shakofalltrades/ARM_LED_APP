@@ -1,66 +1,27 @@
-/* SensorMonitoring.css */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
 
 .sensor-monitoring-container {
-  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
 }
 
-.input-container {
-  margin-bottom: 50px; /* Adjust this value to increase/decrease space */
+.global-controls,
+.node-controls {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px; /* Optional: to add space below the table */
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
-th {
-  background-color: #f2f2f2;
-  text-align: center; /* Center the text in table headers */
-}
-
-button {
-  margin-right: 10px;
-  margin-top: 5px; /* Optional: to add space between buttons and content */
-}
-
-.reset-button {
-  display: block;
-  margin-top: 20px;
-  background-color: #6a0dad;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.reset-button:hover {
-  background-color: #4b0082;
-}
-
+.global-button,
+.node-button,
+.reset-button,
 .back-button {
-  display: block;
-  margin-top: 20px;
-  background-color: #61dafb;
-  color: black;
-  border: none;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.back-button:hover {
-  background-color: #21a1f1;
+  margin: 5px;
 }

@@ -15,82 +15,83 @@ wss.on('connection', (ws) => {
   console.log('WebSocket connection established');
 
   ws.on('message', (message) => {
-    console.log(`Received: ${message}`);
+    const messageString = message.toString(); // Convert Buffer to string
+    console.log(`Received: ${messageString}`);
 
-    // Try to parse the message as JSON
-    try {
-      const data = JSON.parse(message);
+    // Split the message by newlines to handle multiple JSON objects in one message
+    const messages = messageString.split('\n').filter(msg => msg.trim());
 
-      // Handle new connection event
-      if (data.event === 'newConnection' && data.nodeId) {
-        console.log(`New node connected: ${data.nodeId}`);
-        nodeIdMap.set(ws, data.nodeId);
+    messages.forEach((msg) => {
+      try {
+        const data = JSON.parse(msg);
 
-        // Notify all clients about the new connection
-        const newConnectionMessage = JSON.stringify({ event: 'newConnection', nodeId: data.nodeId });
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(newConnectionMessage);
-          }
-        });
-      }
+        // Handle new connection event
+        if (data.event === 'newConnection' && data.nodeId) {
+          console.log(`New node connected: ${data.nodeId}`);
+          nodeIdMap.set(ws, data.nodeId);
 
-      // Handle node disconnected event
-      if (data.event === 'nodeDisconnected' && data.nodeId) {
-        console.log(`Node disconnected: ${data.nodeId}`);
-
-        // Notify all clients about the disconnection
-        const nodeDisconnectedMessage = JSON.stringify({ event: 'nodeDisconnected', nodeId: data.nodeId });
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(nodeDisconnectedMessage);
-          }
-        });
-
-        // Find the WebSocket associated with this nodeId and remove it
-        for (let [client, id] of nodeIdMap.entries()) {
-          if (id === data.nodeId) {
-            nodeIdMap.delete(client);
-            break;
-          }
-        }
-      }
-
-      // Handle single character commands
-      if (data.command === 's' || data.command === 'a' || data.command === 't' || data.command === 'r' || data.command === 'p') {
-        console.log(`Command received: ${data.command}`);
-        // Broadcast the command to all connected clients
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ command: data.command, nodeId: data.nodeId }));
-          }
-        });
-        return;
-      }
-
-      // Check if the data contains temperature and/or humidity
-      if (data.temperature !== undefined || data.humidity !== undefined) {
-        const broadcastData = {
-          nodeId: data.nodeId
-        };
-
-        if (data.temperature !== undefined) {
-          broadcastData.temperature = data.temperature;
-        }
-        if (data.humidity !== undefined) {
-          broadcastData.humidity = data.humidity;
+          // Notify all clients about the new connection
+          const newConnectionMessage = JSON.stringify({ event: 'newConnection', nodeId: data.nodeId });
+          wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(newConnectionMessage);
+            }
+          });
         }
 
-        // Broadcast the data to all connected clients
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(broadcastData));
+        // Handle node disconnected event
+        if (data.event === 'nodeDisconnected' && data.nodeId) {
+          console.log(`Node disconnected: ${data.nodeId}`);
+
+          // Notify all clients about the disconnection
+          const nodeDisconnectedMessage = JSON.stringify({ event: 'nodeDisconnected', nodeId: data.nodeId });
+          wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(nodeDisconnectedMessage);
+            }
+          });
+
+          // Find the WebSocket associated with this nodeId and remove it
+          for (let [client, id] of nodeIdMap.entries()) {
+            if (id === data.nodeId) {
+              nodeIdMap.delete(client);
+              break;
+            }
           }
-        });
+        }
+
+        // Handle single character commands
+        if (['s', 'a', 't', 'r', 'p', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6'].includes(data.command)) {
+          console.log(`Command received: ${data.command}`);
+          // Broadcast the command to all connected clients
+          wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({ command: data.command, nodeId: data.nodeId }));
+            }
+          });
+          return;
+        }
+
+        // Check if the data contains temperature and/or humidity
+        if (data.temperature !== undefined || data.humidity !== undefined) {
+          const broadcastData = {
+            nodeId: data.nodeId,
+            temperature: data.temperature,
+            humidity: data.humidity
+          };
+
+          // Broadcast the data to all connected clients
+          wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify(broadcastData));
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Error parsing JSON:', e);
+        console.log('Received non-JSON message:', msg);
       }
-    } catch (e) {
-      console.error('Error parsing JSON:', e);
-    }
+    });
   });
 
   ws.on('close', () => {

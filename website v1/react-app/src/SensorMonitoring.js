@@ -1,9 +1,41 @@
-import React, { useState, useEffect, useRef } from "react";
-import "./SensorMonitoring.css";
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  AppBar,
+  Box,
+  Button,
+  Container,
+  CssBaseline,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Toolbar,
+  Typography,
+  IconButton
+} from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import HomeIcon from '@mui/icons-material/Home';
+import './SensorMonitoring.css';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1a73e8',
+    },
+    secondary: {
+      main: '#f50057',
+    },
+  },
+  typography: {
+    fontFamily: 'Roboto, Arial, sans-serif',
+  },
+});
 
 function SensorMonitoring({ setActivePage }) {
-  const [numNodes, setNumNodes] = useState(1);
-  const [nodes, setNodes] = useState(Array(1).fill({ section: null, data: null, nodeId: null }));
+  const [nodes, setNodes] = useState([]);
   const ws = useRef(null);
 
   useEffect(() => {
@@ -17,33 +49,37 @@ function SensorMonitoring({ setActivePage }) {
       console.log('Message from server:', event.data);
       const message = JSON.parse(event.data);
 
-      setNodes((prevNodes) => {
-        const nodeIndex = prevNodes.findIndex((node) => node.nodeId === message.nodeId);
-        if (nodeIndex !== -1) {
-          const updatedNodes = [...prevNodes];
-          let data = updatedNodes[nodeIndex].data;
-          if (updatedNodes[nodeIndex].section === 'Temperature' && message.temperature !== undefined) {
-            data = `The temperature is ${message.temperature}ºC.`;
-          } else if (updatedNodes[nodeIndex].section === 'Humidity' && message.humidity !== undefined) {
-            data = `The humidity is ${message.humidity}%.`;
-          }
-          updatedNodes[nodeIndex] = { ...updatedNodes[nodeIndex], data, nodeId: message.nodeId };
-          return updatedNodes;
-        } else {
-          return prevNodes.map((node, index) => {
-            if (node.nodeId === null) {
-              let data = node.data;
-              if (node.section === 'Temperature' && message.temperature !== undefined) {
-                data = `The temperature is ${message.temperature}ºC.`;
-              } else if (node.section === 'Humidity' && message.humidity !== undefined) {
-                data = `The humidity is ${message.humidity}%.`;
-              }
-              return { ...node, data, nodeId: message.nodeId };
+      if (message.temperature !== undefined || message.humidity !== undefined) {
+        setNodes((prevNodes) => {
+          const nodeIndex = prevNodes.findIndex((node) => node.nodeId === message.nodeId);
+
+          if (nodeIndex !== -1) {
+            const updatedNodes = [...prevNodes];
+            if (message.temperature !== undefined) {
+              updatedNodes[nodeIndex].temperature = message.temperature;
             }
-            return node;
-          });
-        }
-      });
+            if (message.humidity !== undefined) {
+              updatedNodes[nodeIndex].humidity = message.humidity;
+            }
+            updatedNodes[nodeIndex].lastUpdated = Date.now();
+            updatedNodes[nodeIndex].status = 'Connected';
+            return updatedNodes;
+          } else {
+            return [
+              ...prevNodes,
+              {
+                nodeId: message.nodeId,
+                temperature: message.temperature,
+                humidity: message.humidity,
+                lastUpdated: Date.now(),
+                status: 'Connected',
+              },
+            ];
+          }
+        });
+      } else if (message.command) {
+        console.log(`Command received: ${message.command}`);
+      }
     };
 
     ws.current.onclose = () => {
@@ -55,79 +91,107 @@ function SensorMonitoring({ setActivePage }) {
     };
   }, []);
 
-  const handleNumNodesChange = (e) => {
-    const value = parseInt(e.target.value, 10);
-    setNumNodes(value);
-    setNodes(Array(value).fill({ section: null, data: null, nodeId: null }));
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => ({
+          ...node,
+          status: Date.now() - node.lastUpdated > 6000 ? 'Disconnected' : 'Connected', // 10 seconds threshold
+        }))
+      );
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSendCommand = (command, nodeId) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ command, nodeId }));
+    }
   };
 
-  const handleSectionChange = (index, section) => {
-    const newNodes = nodes.map((node, i) => (i === index ? { ...node, section, data: null } : node));
-    setNodes(newNodes);
-  };
-
-  const handleReset = () => {
-    setNodes(Array(numNodes).fill({ section: null, data: null, nodeId: null }));
-  };
-
-  const handleSendCommand = (command) => {
+  const handleGlobalCommand = (command) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ command }));
     }
   };
 
+  const handleReset = () => {
+    setNodes([]);
+  };
+
   return (
-    <div className="sensor-monitoring-container">
-      <div className="input-container">
-        <label htmlFor="numNodes">Number of Nodes:</label>
-        <input
-          type="number"
-          id="numNodes"
-          min="1"
-          value={numNodes}
-          onChange={handleNumNodesChange}
-        />
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Node</th>
-            <th>Sensor Type</th>
-            <th>Sensor Data</th>
-            <th>Controls</th>
-          </tr>
-        </thead>
-        <tbody>
-          {nodes.map((node, index) => (
-            <tr key={index}>
-              <td>
-                {node.nodeId ? `Node ID: ${node.nodeId}` : `Node ${index + 1}`}
-              </td>
-              <td>
-                <nav>
-                  <button className="sensor-button" onClick={() => handleSectionChange(index, "Temperature")}>Temperature</button>
-                  <button className="sensor-button" onClick={() => handleSectionChange(index, "Humidity")}>Humidity</button>
-                </nav>
-              </td>
-              <td>
-                {node.section === "Temperature" && <p>{node.data !== null ? node.data : "Loading..."}</p>}
-                {node.section === "Humidity" && <p>{node.data !== null ? node.data : "Loading..."}</p>}
-                {node.section === null && <p>No sensor selected.</p>}
-              </td>
-              <td>
-                <button className="control-button" onClick={() => handleSendCommand('p')}>Pause</button>
-                <button className="control-button" onClick={() => handleSendCommand('r')}>Resume</button>
-                <button className="control-button" onClick={() => handleSendCommand('t')}>Toggle</button>
-                <button className="control-button" onClick={() => handleSendCommand('s')}>Sensor</button>
-                <button className="control-button" onClick={() => handleSendCommand('a')}>Animate</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button className="reset-button" onClick={handleReset}>Reset All</button>
-      <button className="back-button" onClick={() => setActivePage("Home")}>Return to Home Page</button>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton edge="start" color="inherit" onClick={() => setActivePage('Home')}>
+            <HomeIcon />
+          </IconButton>
+          <Typography variant="h6" style={{ flexGrow: 1 }}>
+            Sensor Monitoring
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Container maxWidth="lg">
+        <Box my={4}>
+          <Paper elevation={3}>
+            <Box p={2}>
+              <Typography variant="h5" gutterBottom>
+                Global Controls
+              </Typography>
+              <Box display="flex" justifyContent="center" mb={2}>
+                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a1')}>A1</Button>
+                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a2')}>A2</Button>
+                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a3')}>A3</Button>
+                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a4')}>A4</Button>
+                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a5')}>A5</Button>
+                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a6')}>A6</Button>
+              </Box>
+              <Typography variant="h5" gutterBottom>
+                Node Controls
+              </Typography>
+              <Box display="flex" justifyContent="center" mb={2}>
+                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('p')}>Pause</Button>
+                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('r')}>Resume</Button>
+                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('t')}>Toggle</Button>
+                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('s')}>Sensor</Button>
+                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('a')}>Animate</Button>
+              </Box>
+            </Box>
+          </Paper>
+        </Box>
+        <Box my={4}>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Node ID</TableCell>
+                  <TableCell>Temperature (ºC)</TableCell>
+                  <TableCell>Humidity (%)</TableCell>
+                  <TableCell>Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {nodes.map((node, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{node.nodeId}</TableCell>
+                    <TableCell>{node.temperature !== undefined ? node.temperature.toFixed(2) : 'Loading...'}</TableCell>
+                    <TableCell>{node.humidity !== undefined ? node.humidity.toFixed(2) : 'Loading...'}</TableCell>
+                    <TableCell>{node.status}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+        <Box display="flex" justifyContent="center" my={4}>
+          <Button variant="contained" color="primary" onClick={handleReset}>
+            Reset All
+          </Button>
+        </Box>
+      </Container>
+    </ThemeProvider>
   );
 }
 
