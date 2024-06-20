@@ -107,3 +107,26 @@ app.post('/uploadFrame', upload.single('file'), (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
+
+app.get('/getFrame', (req, res) => {
+  const { animationName, frameId } = req.query;
+
+  if (!animationName || !frameId) {
+    return res.status(400).send('Missing animationName or frameId.');
+  }
+
+  const sql = 'SELECT frame FROM ?? WHERE id = ?';
+  con.query(sql, [animationName, frameId], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).send('Error retrieving frame from the database.');
+    }
+    if (result.length === 0) {
+      return res.status(404).send('Frame not found.');
+    }
+
+    const frame = result[0].frame;
+    res.send(frame);
+  });
+});
+
