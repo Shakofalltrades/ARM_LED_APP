@@ -11,7 +11,7 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   const [filled, setFilled] = useState(Array(16).fill().map(() => Array(16).fill(false)));
   const [frames, setFrames] = useState([]);
   const [message, setMessage] = useState("");
-  const [animationName, setAnimationName] = useState(""); // New state for animation name
+  const [animationName, setAnimationName] = useState("");
 
   const drawGrid = useCallback(() => {
     const canvas = canvasRef.current;
@@ -131,7 +131,7 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
       return;
     }
 
-    // in here goes the upload code
+    // Create table for the animation
     try {
       const response = await fetch('http://localhost:5000/createTable', {
         method: 'POST',
@@ -140,7 +140,7 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
         },
         body: JSON.stringify({ animationName }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Error creating table');
       }
@@ -153,6 +153,7 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
       return;
     }
 
+    // Upload frames to the server
     for (const frame of frames) {
       const blob = await (await fetch(frame)).blob();
       const formData = new FormData();

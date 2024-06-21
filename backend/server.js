@@ -5,6 +5,7 @@ import mysql from 'mysql';
 import cors from 'cors';
 import multer from 'multer';
 import fs from 'fs';
+import fetch from 'node-fetch';
 
 const app = express();
 const port = 5000;
@@ -86,7 +87,7 @@ app.post('/uploadFrame', upload.single('file'), (req, res) => {
     return res.status(400).send('No file uploaded.');
   }
 
-  fs.readFile(file.path, (err, data) => {
+  fs.readFile(file.path, async (err, data) => {
     if (err) {
       return res.status(500).send('Error reading the file.');
     }
@@ -94,11 +95,34 @@ app.post('/uploadFrame', upload.single('file'), (req, res) => {
     const sql = 'INSERT INTO ?? (frame) VALUES (?)';
     const values = [animationName, data];
 
-    con.query(sql, values, (err, result) => {
+    con.query(sql, values, async (err, result) => {
       if (err) {
         console.log(err);
         return res.status(500).send('Error saving to the database.');
       }
+
+      // Send the frame to the ESP-32
+      try {
+        const response = await fetch('http://192.168.123.51/uploadFrame', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            frameId: result.insertId,
+            frameData: data.toString('base64')
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Error sending frame to ESP-32');
+        }
+
+        console.log('Frame sent to ESP-32 successfully');
+      } catch (error) {
+        console.error('Error:', error);
+      }
+
       res.send({ message: 'Frame uploaded and saved to database', id: result.insertId });
     });
   });
@@ -129,4 +153,3 @@ app.get('/getFrame', (req, res) => {
     res.send(frame);
   });
 });
-

@@ -7,8 +7,6 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "nodemon server.js"
     },
-
-    
     "keywords": [],
     "author": "",
     "license": "ISC",
@@ -20,6 +18,7 @@
         "fs": "^0.0.1-security",
         "multer": "^1.4.5-lts.1",
         "mysql": "^2.18.1",
+        "node-fetch": "^3.3.2",
         "nodemon": "^3.1.2",
         "prompt-sync": "^4.2.0"
     }
