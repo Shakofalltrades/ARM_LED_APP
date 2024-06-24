@@ -12,8 +12,41 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   const [filled, setFilled] = useState(Array(16).fill().map(() => Array(16).fill(false)));
   const [frames, setFrames] = useState([]);
   const [message, setMessage] = useState("");
+<<<<<<< HEAD
   const [animationName, setAnimationName] = useState(""); 
   const [fps, setFps] = useState(10); // New state for fps
+=======
+  const [animationName, setAnimationName] = useState("");
+  const [ws, setWs] = useState(null);
+
+  useEffect(() => {
+    // Establish WebSocket connection when component mounts
+    const socket = new WebSocket("ws://localhost:8081");
+
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+      console.log("Received message from WebSocket:", event.data);
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    setWs(socket);
+
+    // Cleanup WebSocket connection when component unmounts
+    return () => {
+      socket.close();
+    };
+  }, []);
+>>>>>>> 110b9648b722cd0ac1aa6d00ab54cb69c191ed04
 
   const drawGrid = useCallback(() => {
     const canvas = canvasRef.current;
@@ -177,6 +210,27 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
       fps: parseInt(fps, 10),
       images: frames.map(frame => frame.split(",")[1]), // Remove the base64 prefix
     };
+    // Send "c" character to WebSocket server
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      console.log("Sending 'c' to WebSocket server");
+      ws.send(JSON.stringify({ command: 'c' }));
+    } else {
+      console.error("WebSocket connection is not open");
+    }
+
+    // in here goes the upload code
+    try {
+      const response = await fetch('http://localhost:5000/createTable', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ animationName }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error creating table');
+      }
 
     downloadJSON(animationData, `${animationName}.json`);
     await uploadJSON(animationData); // Upload the JSON data
