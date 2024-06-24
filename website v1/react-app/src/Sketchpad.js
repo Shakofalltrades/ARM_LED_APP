@@ -48,8 +48,8 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     const canvas = canvasRef.current;
     const cellSize = canvas.width / 16;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientX || e.touches[0].clienY) - rect.top;
     const col = Math.floor(x / cellSize);
     const row = Math.floor(y / cellSize);
 
