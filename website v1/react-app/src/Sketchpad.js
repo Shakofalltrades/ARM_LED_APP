@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import "./Sketchpad.css";
+import axios from "axios"; // Import axios for HTTP requests
 
 const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   const canvasRef = useRef(null);
@@ -151,6 +152,19 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     document.body.removeChild(a);
   };
 
+  const uploadJSON = async (data) => {
+    try {
+      const response = await axios.post('http://localhost:4000/upload', data, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Upload successful', response.data);
+    } catch (error) {
+      console.error('Upload failed', error);
+    }
+  };
+
   const animateAndNavigate = async () => {
     if (animationName.trim() === "") {
       setMessage("Please enter a name for your animation.");
@@ -165,6 +179,7 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     };
 
     downloadJSON(animationData, `${animationName}.json`);
+    await uploadJSON(animationData); // Upload the JSON data
     
     setAnimationFrames(frames); 
     setActivePage("AnimationDisplay");
