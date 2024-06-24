@@ -11,11 +11,11 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   const [filled, setFilled] = useState(Array(16).fill().map(() => Array(16).fill(false)));
   const [frames, setFrames] = useState([]);
   const [message, setMessage] = useState("");
-  const [animationName, setAnimationName] = useState("");
+  const [animationName, setAnimationName] = useState(""); 
+  const [fps, setFps] = useState(10); 
   const [ws, setWs] = useState(null);
 
   useEffect(() => {
-    // Establish WebSocket connection when component mounts
     const socket = new WebSocket("ws://localhost:8081");
 
     socket.onopen = () => {
@@ -36,7 +36,6 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
 
     setWs(socket);
 
-    // Cleanup WebSocket connection when component unmounts
     return () => {
       socket.close();
     };
@@ -128,8 +127,8 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   const doneDrawing = async () => {
     const frame = generateImage();
     setFrames([...frames, frame]);
-    setMessage("Your frame has been saved!"); // Set the message
-    setTimeout(() => setMessage(""), 3000); // Clear the message after 3 seconds
+    setMessage("Your frame has been saved!");
+    setTimeout(() => setMessage(""), 3000);
   };
 
   const generateImage = () => {
@@ -153,6 +152,22 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     setAnimationName(e.target.value);
   };
 
+  const handleFpsChange = (e) => {
+    setFps(e.target.value);
+  };
+
+  const downloadJSON = (data, filename) => {
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const animateAndNavigate = async () => {
     if (animationName.trim() === "") {
       setMessage("Please enter a name for your animation.");
@@ -160,7 +175,6 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
       return;
     }
 
-    // Send "c" character to WebSocket server
     if (ws && ws.readyState === WebSocket.OPEN) {
       console.log("Sending 'c' to WebSocket server");
       ws.send(JSON.stringify({ command: 'c' }));
@@ -168,53 +182,35 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
       console.error("WebSocket connection is not open");
     }
 
-    // in here goes the upload code
+    const animationData = {
+      name: animationName,
+      fps: parseInt(fps, 10),
+      images: frames.map(frame => frame.split(",")[1]),
+    };
+
     try {
-      const response = await fetch('http://localhost:5000/createTable', {
+      const response = await fetch('http://localhost:5000/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ animationName }),
+        body: JSON.stringify(animationData),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Error creating table');
+        throw new Error('Error uploading animation data');
       }
 
       const data = await response.json();
-      console.log(data.message);
+      console.log('Animation data uploaded successfully', data);
     } catch (error) {
-      setMessage(`Error: ${error.message}`);
+      setMessage(`Error uploading animation data: ${error.message}`);
       setTimeout(() => setMessage(""), 3000);
       return;
     }
 
-    for (const frame of frames) {
-      const blob = await (await fetch(frame)).blob();
-      const formData = new FormData();
-      formData.append('file', blob, `drawing-${frames.indexOf(frame) + 1}.png`);
-      formData.append('animationName', animationName);
-
-      try {
-        const response = await fetch('http://localhost:5000/uploadFrame', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error('Error uploading frame');
-        }
-
-        const data = await response.json();
-        console.log('Frame uploaded successfully', data);
-      } catch (error) {
-        setMessage(`Error uploading frame: ${error.message}`);
-        setTimeout(() => setMessage(""), 3000);
-      }
-    }
-
-    setAnimationFrames(frames); // Update the parent state
+    downloadJSON(animationData, `${animationName}.json`);
+    setAnimationFrames(frames);
     setActivePage("AnimationDisplay");
   };
 
@@ -252,6 +248,14 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
               value={animationName}
               onChange={handleNameChange}
               className="animation-name-input"
+            />
+            <input
+              type="number"
+              placeholder="FPS"
+              value={fps}
+              onChange={handleFpsChange}
+              className="fps-input"
+              min="1"
             />
             <button className="button" onClick={animateAndNavigate}>Animate</button>
             <button className="button" onClick={newAnimationSequence}>New Animation Sequence</button>

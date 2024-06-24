@@ -16,17 +16,14 @@ app.use(cors({
 
 app.use(express.json());
 
-// Convert import.meta.url to __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure the upload directory exists
 const uploadDir = path.join(__dirname, 'upload');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Function to clear the upload directory
 const clearUploadDir = () => {
   fs.readdir(uploadDir, (err, files) => {
     if (err) throw err;
@@ -39,10 +36,8 @@ const clearUploadDir = () => {
   });
 };
 
-// Clear the upload directory
 clearUploadDir();
 
-// File upload using multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -53,7 +48,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// MySQL connection
 const con = mysql.createConnection({
   host: 'arm.cvcoiqug200c.us-east-1.rds.amazonaws.com',
   user: 'imperial',
@@ -66,67 +60,22 @@ con.connect((err) => {
   console.log('Connected to MySQL animations database');
 });
 
-app.post('/createTable', (req, res) => {
-  const { animationName } = req.body;
-  const sql = `CREATE TABLE ?? (id INT AUTO_INCREMENT PRIMARY KEY, frame LONGBLOB)`;
-  con.query(sql, [animationName], (err, result) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).send('Error creating table.');
-    }
-    res.send({ message: 'Table created successfully' });
-  });
-});
+app.post('/upload', (req, res) => {
+  const animationData = req.body;
 
-app.post('/uploadFrame', upload.single('file'), (req, res) => {
-  const file = req.file;
-  const { animationName } = req.body;
-
-  if (!file) {
-    return res.status(400).send('No file uploaded.');
+  if (!animationData.name || !animationData.images || !animationData.fps) {
+    return res.status(400).send('Invalid animation data.');
   }
 
-  fs.readFile(file.path, (err, data) => {
+  const filePath = path.join(uploadDir, `${animationData.name}.json`);
+  fs.writeFile(filePath, JSON.stringify(animationData, null, 2), (err) => {
     if (err) {
-      return res.status(500).send('Error reading the file.');
+      return res.status(500).send('Error saving animation data.');
     }
-
-    const sql = 'INSERT INTO ?? (frame) VALUES (?)';
-    const values = [animationName, data];
-
-    con.query(sql, values, (err, result) => {
-      if (err) {
-        console.log(err);
-        return res.status(500).send('Error saving to the database.');
-      }
-      res.send({ message: 'Frame uploaded and saved to database', id: result.insertId });
-    });
+    res.send({ message: 'Animation data uploaded successfully' });
   });
 });
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
-
-app.get('/getFrame', (req, res) => {
-  const { animationName, frameId } = req.query;
-
-  if (!animationName || !frameId) {
-    return res.status(400).send('Missing animationName or frameId.');
-  }
-
-  const sql = 'SELECT frame FROM ?? WHERE id = ?';
-  con.query(sql, [animationName, frameId], (err, result) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).send('Error retrieving frame from the database.');
-    }
-    if (result.length === 0) {
-      return res.status(404).send('Frame not found.');
-    }
-
-    const frame = result[0].frame;
-    res.send(frame);
-  });
-});
-
