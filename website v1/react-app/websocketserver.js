@@ -2,7 +2,7 @@ const express = require('express');
 const WebSocket = require('ws');
 
 const app = express();
-const port = 8080;
+const port = 8081;
 
 const server = app.listen(port, () => {
   console.log(`Server is listening on http://localhost:${port}`);
@@ -61,7 +61,7 @@ wss.on('connection', (ws) => {
         }
 
         // Handle single character commands
-        if (['s', 'a', 't', 'r', 'p', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6'].includes(data.command)) {
+        if (['s', 'a', 't', 'r', 'p', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'c'].includes(data.command)) {
           console.log(`Command received: ${data.command}`);
           // Broadcast the command to all connected clients
           wss.clients.forEach((client) => {
