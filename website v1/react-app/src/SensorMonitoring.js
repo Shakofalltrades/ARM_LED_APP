@@ -6,15 +6,13 @@ import {
   Container,
   CssBaseline,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  Grid,
   Toolbar,
   Typography,
-  IconButton
+  IconButton,
+  Card,
+  CardContent,
+  CardActions,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
@@ -39,7 +37,7 @@ function SensorMonitoring({ setActivePage }) {
   const ws = useRef(null);
 
   useEffect(() => {
-    ws.current = new WebSocket('ws://localhost:8080');
+    ws.current = new WebSocket('ws://localhost:8081');
 
     ws.current.onopen = () => {
       console.log('Connected to WebSocket server');
@@ -116,6 +114,12 @@ function SensorMonitoring({ setActivePage }) {
     }
   };
 
+  const handleSendModeCommand = (command) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ command }));
+    }
+  };
+
   const handleReset = () => {
     setNodes([]);
   };
@@ -137,54 +141,102 @@ function SensorMonitoring({ setActivePage }) {
         <Box my={4}>
           <Paper elevation={3}>
             <Box p={2}>
-              <Typography variant="h5" gutterBottom>
-                Global Controls
-              </Typography>
-              <Box display="flex" justifyContent="center" mb={2}>
-                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a1')}>A1</Button>
-                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a2')}>A2</Button>
-                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a3')}>A3</Button>
-                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a4')}>A4</Button>
-                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a5')}>A5</Button>
-                <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a6')}>A6</Button>
+              <Box mb={4}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  style={{ marginBottom: '16px' }}
+                  onClick={() => handleSendModeCommand('s')}
+                >
+                  Sensor Mode
+                </Button>
+                <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
+                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('temperature')} style={{ marginRight: '8px' }}>
+                    Temperature
+                  </Button>
+                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('humidity')}>
+                    Humidity
+                  </Button>
+                </Box>
               </Box>
-              <Typography variant="h5" gutterBottom>
-                Node Controls
-              </Typography>
-              <Box display="flex" justifyContent="center" mb={2}>
-                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('p')}>Pause</Button>
-                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('r')}>Resume</Button>
-                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('t')}>Toggle</Button>
-                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('s')}>Sensor</Button>
-                <Button variant="contained" color="secondary" onClick={() => handleSendCommand('a')}>Animate</Button>
+              <Box mb={4}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  style={{ marginBottom: '16px' }}
+                  onClick={() => handleSendModeCommand('a')}
+                >
+                  Animate
+                </Button>
+                <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a1')} style={{ marginRight: '8px' }}>
+                    A1
+                  </Button>
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a2')} style={{ marginRight: '8px' }}>
+                    A2
+                  </Button>
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a3')} style={{ marginRight: '8px' }}>
+                    A3
+                  </Button>
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a4')} style={{ marginRight: '8px' }}>
+                    A4
+                  </Button>
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a5')} style={{ marginRight: '8px' }}>
+                    A5
+                  </Button>
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a6')}>
+                    A6
+                  </Button>
+                </Box>
+              </Box>
+              <Box mb={4}>
+                <Typography variant="h5" gutterBottom>
+                  Global Controls
+                </Typography>
+                <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
+                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('p')} style={{ marginRight: '8px' }}>
+                    Pause
+                  </Button>
+                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('r')} style={{ marginRight: '8px' }}>
+                    Resume
+                  </Button>
+                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('t')}>
+                    Toggle
+                  </Button>
+                </Box>
               </Box>
             </Box>
           </Paper>
         </Box>
-        <Box my={4}>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Node ID</TableCell>
-                  <TableCell>Temperature (ºC)</TableCell>
-                  <TableCell>Humidity (%)</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {nodes.map((node, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{node.nodeId}</TableCell>
-                    <TableCell>{node.temperature !== undefined ? node.temperature.toFixed(2) : 'Loading...'}</TableCell>
-                    <TableCell>{node.humidity !== undefined ? node.humidity.toFixed(2) : 'Loading...'}</TableCell>
-                    <TableCell>{node.status}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
+        <Grid container spacing={3}>
+          {nodes.map((node, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" component="div">
+                    Node ID: {node.nodeId}
+                  </Typography>
+                  <Typography color="textSecondary">
+                    Temperature: {node.temperature !== undefined ? node.temperature.toFixed(2) : 'Loading...'} °C
+                  </Typography>
+                  <Typography color="textSecondary">
+                    Humidity: {node.humidity !== undefined ? node.humidity.toFixed(2) : 'Loading...'} %
+                  </Typography>
+                  <Typography color={node.status === 'Connected' ? 'primary' : 'error'}>
+                    Status: {node.status}
+                  </Typography>
+                </CardContent>
+                <CardActions>
+                  <Button size="small" color="primary" onClick={() => handleSendCommand('p', node.nodeId)}>Pause</Button>
+                  <Button size="small" color="primary" onClick={() => handleSendCommand('r', node.nodeId)}>Resume</Button>
+                  <Button size="small" color="primary" onClick={() => handleSendCommand('t', node.nodeId)}>Toggle</Button>
+                  <Button size="small" color="primary" onClick={() => handleSendCommand('s', node.nodeId)}>Sensor</Button>
+                  <Button size="small" color="primary" onClick={() => handleSendCommand('a', node.nodeId)}>Animate</Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
         <Box display="flex" justifyContent="center" my={4}>
           <Button variant="contained" color="primary" onClick={handleReset}>
             Reset All

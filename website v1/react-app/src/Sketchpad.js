@@ -11,7 +11,36 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   const [filled, setFilled] = useState(Array(16).fill().map(() => Array(16).fill(false)));
   const [frames, setFrames] = useState([]);
   const [message, setMessage] = useState("");
-  const [animationName, setAnimationName] = useState(""); // New state for animation name
+  const [animationName, setAnimationName] = useState("");
+  const [ws, setWs] = useState(null);
+
+  useEffect(() => {
+    // Establish WebSocket connection when component mounts
+    const socket = new WebSocket("ws://localhost:8081");
+
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+      console.log("Received message from WebSocket:", event.data);
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    setWs(socket);
+
+    // Cleanup WebSocket connection when component unmounts
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   const drawGrid = useCallback(() => {
     const canvas = canvasRef.current;
@@ -129,6 +158,14 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
       setMessage("Please enter a name for your animation.");
       setTimeout(() => setMessage(""), 3000);
       return;
+    }
+
+    // Send "c" character to WebSocket server
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      console.log("Sending 'c' to WebSocket server");
+      ws.send(JSON.stringify({ command: 'c' }));
+    } else {
+      console.error("WebSocket connection is not open");
     }
 
     // in here goes the upload code
