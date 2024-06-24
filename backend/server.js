@@ -7,7 +7,7 @@ import multer from 'multer';
 import fs from 'fs';
 
 const app = express();
-const port = 5000;
+const port = 4000;
 
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -104,8 +104,34 @@ app.post('/uploadFrame', upload.single('file'), (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+app.post('/upload', (req, res) => {
+  const animationData = req.body;
+
+  if (!animationData.name || !animationData.images || !animationData.fps) {
+    return res.status(400).send('Invalid animation data.');
+  }
+
+  const { name, images, fps } = animationData;
+
+  const sqlCreateTable = `CREATE TABLE IF NOT EXISTS ?? (id INT AUTO_INCREMENT PRIMARY KEY, frame LONGBLOB, fps INT)`;
+  con.query(sqlCreateTable, [name], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).send('Error creating table.');
+    }
+
+    const sqlInsertFrame = `INSERT INTO ?? (frame, fps) VALUES (?, ?)`;
+    images.forEach((image, index) => {
+      const imageData = Buffer.from(image, 'base64');
+      con.query(sqlInsertFrame, [name, imageData, fps], (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+      });
+    });
+
+    res.send({ message: 'Animation data uploaded successfully' });
+  });
 });
 
 app.get('/getFrame', (req, res) => {
@@ -130,3 +156,6 @@ app.get('/getFrame', (req, res) => {
   });
 });
 
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
