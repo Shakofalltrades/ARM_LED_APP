@@ -171,6 +171,9 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
           width="320"
           height="320"
           onMouseDown={startDrawing}
+          onTouchStart={startDrawing}
+          onTouchEnd={stopDrawing}
+          onTouchMove={draw}
           onMouseUp={stopDrawing}
           onMouseMove={draw}
           className="sketchpad-canvas"
