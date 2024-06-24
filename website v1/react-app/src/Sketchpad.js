@@ -34,11 +34,13 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   }, [grid, drawGrid]);
 
   const startDrawing = (e) => {
+    e.preventDefault();
     setDrawing(true);
     draw(e);
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e) => {
+    e.preventDefault();
     setDrawing(false);
   };
 
@@ -48,8 +50,16 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     const canvas = canvasRef.current;
     const cellSize = canvas.width / 16;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches[0].clientX) - rect.left;
-    const y = (e.clientX || e.touches[0].clienY) - rect.top;
+    let x, y;
+
+    if (e.type.includes("mouse")) {
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+    } else {
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
+    }
+
     const col = Math.floor(x / cellSize);
     const row = Math.floor(y / cellSize);
 
@@ -171,11 +181,11 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
           width="320"
           height="320"
           onMouseDown={startDrawing}
+          onMouseUp={stopDrawing}
+          onMouseMove={draw}
           onTouchStart={startDrawing}
           onTouchEnd={stopDrawing}
           onTouchMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseMove={draw}
           className="sketchpad-canvas"
         ></canvas>
         <div className="instructions">
