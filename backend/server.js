@@ -11,7 +11,7 @@ const port = 5000;
 
 app.use(cors({
   origin: 'http://localhost:3000',
-  methods: ['POST']
+  methods: ['POST', 'GET']
 }));
 
 app.use(express.json());
@@ -60,6 +60,8 @@ con.connect((err) => {
   console.log('Connected to MySQL animations database');
 });
 
+let latestAnimationName = ''; // Variable to store the latest animation name
+
 app.post('/upload', (req, res) => {
   const animationData = req.body;
 
@@ -72,7 +74,27 @@ app.post('/upload', (req, res) => {
     if (err) {
       return res.status(500).send('Error saving animation data.');
     }
+    latestAnimationName = animationData.name; // Update the latest animation name
     res.send({ message: 'Animation data uploaded successfully' });
+  });
+});
+
+// New endpoint to handle GET requests for the latest JSON animation data
+app.get('/latest-animation', (req, res) => {
+  if (!latestAnimationName) {
+    return res.status(404).send('No animation data available.');
+  }
+  const filePath = path.join(uploadDir, `${latestAnimationName}.json`);
+
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        return res.status(404).send('Animation not found.');
+      }
+      return res.status(500).send('Error reading animation data.');
+    }
+    res.setHeader('Content-Type', 'application/json');
+    res.send(data);
   });
 });
 
