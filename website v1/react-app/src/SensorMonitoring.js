@@ -133,7 +133,7 @@ function SensorMonitoring({ setActivePage }) {
             <HomeIcon />
           </IconButton>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
-            Sensor Monitoring
+            Node Control
           </Typography>
         </Toolbar>
       </AppBar>
@@ -142,6 +142,9 @@ function SensorMonitoring({ setActivePage }) {
           <Paper elevation={3}>
             <Box p={2}>
               <Box mb={4}>
+                <Typography variant="h6" gutterBottom>
+                  Sensor Animations
+                </Typography>
                 <Button
                   variant="contained"
                   color="primary"
@@ -151,47 +154,53 @@ function SensorMonitoring({ setActivePage }) {
                   Sensor Mode
                 </Button>
                 <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
-                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('temperature')} style={{ marginRight: '8px' }}>
+                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('st')} style={{ marginRight: '8px' }}>
                     Temperature
                   </Button>
-                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('humidity')}>
+                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('sh')}>
                     Humidity
                   </Button>
                 </Box>
               </Box>
               <Box mb={4}>
+                <Typography variant="h6" gutterBottom>
+                  Default Animations
+                </Typography>
                 <Button
                   variant="contained"
                   color="primary"
                   style={{ marginBottom: '16px' }}
                   onClick={() => handleSendModeCommand('a')}
                 >
-                  Animate
+                  Animation Mode
                 </Button>
                 <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a1')} style={{ marginRight: '8px' }}>
-                    A1
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a1')} style={{ marginRight: '8px', marginTop: '8px' }}>
+                    Bird
                   </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a2')} style={{ marginRight: '8px' }}>
-                    A2
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a2')} style={{ marginRight: '8px', marginTop: '8px' }}>
+                    Coin
                   </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a3')} style={{ marginRight: '8px' }}>
-                    A3
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a3')} style={{ marginRight: '8px', marginTop: '8px' }}>
+                    Sword
                   </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a4')} style={{ marginRight: '8px' }}>
-                    A4
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a4')} style={{ marginRight: '8px', marginTop: '8px' }}>
+                    Torch
                   </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a5')} style={{ marginRight: '8px' }}>
-                    A5
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a5')} style={{ marginRight: '8px', marginTop: '8px' }}>
+                    Tank
                   </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a6')}>
-                    A6
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a6')} style={{ marginRight: '8px', marginTop: '8px' }}>
+                    Zombies
+                  </Button>
+                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a7')} style={{ marginTop: '8px' }}>
+                    ARM x Imperial
                   </Button>
                 </Box>
               </Box>
               <Box mb={4}>
-                <Typography variant="h5" gutterBottom>
-                  Global Controls
+                <Typography variant="h6" gutterBottom>
+                  Controls
                 </Typography>
                 <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
                   <Button variant="contained" color="secondary" onClick={() => handleSendCommand('p')} style={{ marginRight: '8px' }}>
@@ -201,7 +210,7 @@ function SensorMonitoring({ setActivePage }) {
                     Resume
                   </Button>
                   <Button variant="contained" color="secondary" onClick={() => handleSendCommand('t')}>
-                    Toggle
+                    Next
                   </Button>
                 </Box>
               </Box>

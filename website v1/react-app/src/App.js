@@ -39,7 +39,7 @@ function App() {
     <div className="App">
       <Header />
       {content}
-      <Footer />
+      
     </div>
   );
 }
