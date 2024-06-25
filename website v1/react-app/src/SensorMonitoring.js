@@ -37,7 +37,7 @@ function SensorMonitoring({ setActivePage }) {
   const ws = useRef(null);
 
   useEffect(() => {
-    ws.current = new WebSocket('ws://localhost:8081');
+    ws.current = new WebSocket('ws://192.168.30.44:8081');
 
     ws.current.onopen = () => {
       console.log('Connected to WebSocket server');

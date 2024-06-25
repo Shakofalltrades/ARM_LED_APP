@@ -65,7 +65,6 @@ const AnimationDisplay = ({ setActivePage, animationFrames, animationName }) => 
           Return to Sketchpad
         </button>
       </div>
-      <footer className="animation-footer">Footer Content Here</footer>
     </div>
   );
 };
