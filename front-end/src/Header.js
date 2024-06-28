@@ -1,12 +1,21 @@
-//Header.js
+// Header.js
 
-import React from "react";
+import React from 'react';
+import { AppBar, Toolbar, IconButton, Typography } from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
 
-function Header() {
+function Header({ setActivePage }) {
   return (
-    <header className="App-header">
-      <h1>LUMNET</h1>
-    </header>
+    <AppBar position="static">
+      <Toolbar>
+        <IconButton edge="start" color="inherit" onClick={() => setActivePage('Home')}>
+          <HomeIcon />
+        </IconButton>
+        <Typography variant="h4" style={{ flexGrow: 1, fontWeight: 'bold' }}>
+          LUMNET
+        </Typography>
+      </Toolbar>
+    </AppBar>
   );
 }
 

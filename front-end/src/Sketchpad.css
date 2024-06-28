@@ -1,44 +1,52 @@
-.sketchpad-container {
-  text-align: center;
-  margin: 20px;
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
 }
 
-.sketchpad-content {
+.sketchpad-container {
   display: flex;
-  justify-content: left;
-  align-items: left;
-  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
 }
 
 .message-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column; /* To align the message vertically */
-  width: 200px; /* Adjust as needed for space */
+  margin-bottom: 20px;
 }
 
 .message {
   background-color: #a0e1f1;
   border: 1px solid #62a5b6;
   padding: 10px;
-  margin-bottom: 20px;
   border-radius: 4px;
-  font-family: inherit; /* Inherit font from the parent */
-  color: inherit; /* Inherit color from the parent */
+  font-family: inherit;
+  color: inherit;
 }
 
-.sketchpad-canvas {
-  border: 1px solid #000;
-  cursor: crosshair;
-  width: 320px;  /* Scale the canvas up */
-  height: 320px; /* Scale the canvas up */
-  image-rendering: pixelated; /* Ensure crisp rendering for pixel art */
+.content-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  max-width: 1400px;
+  width: 100%;
+}
+
+.left-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .instructions {
-  max-width: 300px;
+  max-width: 400px;
   text-align: left;
+  margin-right: auto;
 }
 
 .instructions ol {
@@ -47,52 +55,75 @@
 
 .instructions ol li {
   margin-bottom: 10px;
-  white-space: nowrap; /* Prevent line breaks within list items */
+  white-space: nowrap;
 }
 
-.instructions .instruction-buttons {
-  margin-top: 10px;
+.sketchpad-canvas {
+  border: 1px solid #000;
+  cursor: crosshair;
+  width: 600px;
+  height: 600px;
+  image-rendering: pixelated;
+}
+
+.sketchpad-controls {
   display: flex;
   gap: 10px;
-}
-
-.controls {
   margin-top: 20px;
-  display: flex;
-  justify-content: center;
   flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.sketchpad-controls label {
+  display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-.controls input[type="color"] {
+.sketchpad-controls input[type="color"],
+.sketchpad-controls input[type="text"],
+.sketchpad-controls input[type="number"] {
+  height: 40px;
+  width: 150px;
+  font-size: 16px;
   border: none;
-  padding: 5px;
-  cursor: pointer;
+  border-radius: 4px;
+  max-width: 150px;
+  align-items: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .button {
-  background-color: #61dafb;
+  background-color: #1a73e8;
   border: none;
-  color: black;
+  border-radius: 4px;
+  color: white;
   padding: 10px 20px;
   cursor: pointer;
   font-size: 16px;
+  width: 200px;
+  height: 60px;
+  box-sizing: border-box;
 }
 
 .button:hover {
-  background-color: #21a1f1;
+  background-color: #1558b0;
 }
 
-.home-button {
-  background-color: #61dafb;
-  border: none;
-  color: black;
-  padding: 10px 20px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-top: 20px;
+.danger {
+  background-color: #dc3545;
+  width: 200px;
 }
 
-.home-button:hover {
-  background-color: #21a1f1;
+.danger:hover {
+  background-color: #c82333;
 }

@@ -16,30 +16,94 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
   const [ws, setWs] = useState(null);
 
   useEffect(() => {
-    const socket = new WebSocket("ws://192.168.1.214:8081"); // CHANGE THIS IP TO YOUR LOCAL HOST IP!
-
-    socket.onopen = () => {
-      console.log("WebSocket connection established");
-    };
-
-    socket.onmessage = (event) => {
-      console.log("Received message from WebSocket:", event.data);
-    };
-
-    socket.onclose = () => {
-      console.log("WebSocket connection closed");
-    };
-
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
+    const socket = new WebSocket("ws://192.168.1.214:8081");
+    socket.onopen = () => console.log("WebSocket connection established");
+    socket.onmessage = (event) => console.log("Received message:", event.data);
+    socket.onclose = () => console.log("WebSocket connection closed");
+    socket.onerror = (error) => console.error("WebSocket error:", error);
     setWs(socket);
-
-    return () => {
-      socket.close();
-    };
+    return () => socket.close();
   }, []);
+
+  const handleColorChange = (e) => {
+    if (e.target.name === "penColor") {
+      setPenColor(e.target.value);
+    } else {
+      const newBackgroundColor = e.target.value;
+      setBackgroundColor(newBackgroundColor);
+      const newGrid = grid.map((row, rowIndex) =>
+        row.map((cell, colIndex) => filled[rowIndex][colIndex] ? cell : newBackgroundColor)
+      );
+      setGrid(newGrid);
+    }
+  };
+
+  const handleInput = (e) => {
+    e.target.name === "animationName" ? setAnimationName(e.target.value) : setFps(e.target.value);
+  };
+
+  const clearSketchpad = () => {
+    setGrid(Array(16).fill().map(() => Array(16).fill(backgroundColor)));
+    setFilled(Array(16).fill().map(() => Array(16).fill(false)));
+  };
+
+  const newAnimationSequence = () => {
+    setFrames([]);
+    clearSketchpad();
+  };
+
+  const saveFrame = () => {
+    const frame = generateImage();
+    setFrames([...frames, frame]);
+    setMessage("Your frame has been saved!");
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+  const finishAndSend = async () => {
+    if (animationName.trim() === "") {
+      setMessage("Please enter a name for your animation.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      console.log("Sending 'c' to WebSocket server");
+      ws.send(JSON.stringify({ command: 'c' }));
+    } else {
+      console.error("WebSocket connection is not open");
+    }
+
+    const animationData = {
+      name: animationName,
+      fps: parseInt(fps, 10),
+      images: frames.map(frame => frame.split(",")[1]),
+    };
+
+    try {
+      const response = await fetch('http://192.168.1.214:5001/upload', { // CHANGE THIS IP TO YOUR LOCAL HOST IP!
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(animationData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error uploading animation data');
+      }
+
+      const data = await response.json();
+      console.log('Animation data uploaded successfully', data);
+    } catch (error) {
+      setMessage(`Error uploading animation data: ${error.message}`);
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    downloadJSON(animationData, `${animationName}.json`);
+    setAnimationFrames(frames);
+    setActivePage("AnimationDisplay");
+  };
 
   const drawGrid = useCallback(() => {
     const canvas = canvasRef.current;
@@ -96,41 +160,6 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     setFilled(newFilled);
   };
 
-  const toggleEraser = () => {
-    setIsErasing(!isErasing);
-  };
-
-  const clearSketchpad = () => {
-    setGrid(Array(16).fill().map(() => Array(16).fill(backgroundColor)));
-    setFilled(Array(16).fill().map(() => Array(16).fill(false)));
-  };
-
-  const newAnimationSequence = () => {
-    setFrames([]);
-    clearSketchpad();
-  };
-
-  const handleColorChange = (e) => {
-    setPenColor(e.target.value);
-    setIsErasing(false);
-  };
-
-  const handleBackgroundColorChange = (e) => {
-    const newBackgroundColor = e.target.value;
-    setBackgroundColor(newBackgroundColor);
-    const newGrid = grid.map((row, rowIndex) =>
-      row.map((cell, colIndex) => filled[rowIndex][colIndex] ? cell : newBackgroundColor)
-    );
-    setGrid(newGrid);
-  };
-
-  const doneDrawing = async () => {
-    const frame = generateImage();
-    setFrames([...frames, frame]);
-    setMessage("Your frame has been saved!");
-    setTimeout(() => setMessage(""), 3000);
-  };
-
   const generateImage = () => {
     const resizedCanvas = document.createElement("canvas");
     const resizedContext = resizedCanvas.getContext("2d");
@@ -148,14 +177,6 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     return resizedCanvas.toDataURL("image/png");
   };
 
-  const handleNameChange = (e) => {
-    setAnimationName(e.target.value);
-  };
-
-  const handleFpsChange = (e) => {
-    setFps(e.target.value);
-  };
-
   const downloadJSON = (data, filename) => {
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: "application/json" });
@@ -168,125 +189,88 @@ const Sketchpad = ({ setActivePage, setAnimationFrames }) => {
     document.body.removeChild(a);
   };
 
-  const animateAndNavigate = async () => {
-    if (animationName.trim() === "") {
-      setMessage("Please enter a name for your animation.");
-      setTimeout(() => setMessage(""), 3000);
-      return;
-    }
-
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      console.log("Sending 'c' to WebSocket server");
-      ws.send(JSON.stringify({ command: 'c' }));
-    } else {
-      console.error("WebSocket connection is not open");
-    }
-
-    const animationData = {
-      name: animationName,
-      fps: parseInt(fps, 10),
-      images: frames.map(frame => frame.split(",")[1]),
-    };
-
-    try {
-      const response = await fetch('http://192.168.1.214:5001/upload', { // CHANGE THIS IP TO YOUR LOCAL HOST IP!
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(animationData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error uploading animation data');
-      }
-
-      const data = await response.json();
-      console.log('Animation data uploaded successfully', data);
-    } catch (error) {
-      setMessage(`Error uploading animation data: ${error.message}`);
-      setTimeout(() => setMessage(""), 3000);
-      return;
-    }
-
-    downloadJSON(animationData, `${animationName}.json`);
-    setAnimationFrames(frames);
-    setActivePage("AnimationDisplay");
-  };
-
   return (
     <div className="sketchpad-container">
-      <div className="sketchpad-content">
-        <div className="message-container">
-          {message && <div className="message">{message}</div>}
-        </div>
-        <canvas
-          ref={canvasRef}
-          width="320"
-          height="320"
-          onMouseDown={startDrawing}
-          onMouseUp={stopDrawing}
-          onMouseMove={draw}
-          className="sketchpad-canvas"
-        ></canvas>
-        <div className="instructions">
-          <h2>Instructions:</h2>
-          <ol>
-            <li>Click and drag on the grid to color each pixel</li>
-            <li>Choose the pen color</li>
-            <li>Choose the background color</li>
-            <li>When your drawing is complete, click Done to save the frame</li>
-            <li>Click Animate to download all frames for animation and view animation</li>
-            <li>Click Clear Sketchpad to clear the canvas</li>
-            <li>Click New Animation Sequence to start a new animation sequence</li>
-          </ol>
-          <div className="instruction-buttons">
-            <button className="button" onClick={doneDrawing}>Done</button>
+      <div className="message-container">
+        {message && <div className="message">{message}</div>}
+      </div>
+      <div className="content-wrapper">
+        <div className="left-section">
+          <div className="instructions">
+            <h2>Instructions:</h2>
+            <ol>
+              <li>Click and drag on the grid to color each pixel</li>
+              <li>Choose the pen color</li>
+              <li>Choose the background color</li>
+              <li>When your drawing is complete, click Done to save the frame</li>
+              <li>Click Animate to download all frames for animation and view animation</li>
+              <li>Click Clear Sketchpad to clear the canvas</li>
+              <li>Click New Animation Sequence to start a new animation sequence</li>
+            </ol>
+          </div>
+          <div className="sketchpad-controls">
+            <label>
+              Pen: 
+              <input
+                type="color"
+                name="penColor"
+                value={penColor}
+                onChange={handleColorChange}
+              />
+            </label>
+            <label>
+              Canvas: 
+              <input
+                type="color"
+                name="backgroundColor"
+                value={backgroundColor}
+                onChange={handleColorChange}
+              />
+            </label>
             <input
               type="text"
-              placeholder="Enter animation name"
+              placeholder="Animation Name"
+              name="animationName"
               value={animationName}
-              onChange={handleNameChange}
+              onChange={handleInput}
               className="animation-name-input"
             />
             <input
               type="number"
               placeholder="FPS"
+              name="fps"
               value={fps}
-              onChange={handleFpsChange}
+              onChange={handleInput}
               className="fps-input"
               min="1"
             />
-            <button className="button" onClick={animateAndNavigate}>Animate</button>
-            <button className="button" onClick={newAnimationSequence}>New Animation Sequence</button>
+          </div>
+          <div className="action-buttons">
+            <button className="button" onClick={() => setIsErasing(!isErasing)}>
+              {isErasing ? "Switch to Pen" : "Switch to Eraser"}
+            </button>
+            <button className="button" onClick={saveFrame}>Save Frame</button>
+            <button className="button" onClick={finishAndSend}>Finish and Send</button>
+          </div>
+          <div className="action-buttons">
+            <button className="danger button" onClick={clearSketchpad}>Clear Sketchpad</button>
+            <button className="danger button" onClick={newAnimationSequence}>Delete and Restart</button>
           </div>
         </div>
+        <canvas
+          ref={canvasRef}
+          width="600"
+          height="600"
+          onMouseDown={startDrawing}
+          onMouseUp={stopDrawing}
+          onMouseMove={draw}
+          className="sketchpad-canvas"
+        ></canvas>
       </div>
-      <div className="controls">
-        <input
-          type="color"
-          value={penColor}
-          onChange={handleColorChange}
-          title="Choose pen color"
-        />
-        <label>Pen Color</label>
-        <input
-          type="color"
-          value={backgroundColor}
-          onChange={handleBackgroundColorChange}
-          title="Choose background color"
-        />
-        <label>Background Color</label>
-        <button className="button" onClick={toggleEraser}>
-          {isErasing ? "Switch to Pen" : "Switch to Eraser"}
-        </button>
-        <button className="button" onClick={clearSketchpad}>Clear Sketchpad</button>
-      </div>
-      <button className="home-button" onClick={() => setActivePage("Home")}>
-        Return to Home Page
-      </button>
     </div>
   );
 };
 
 export default Sketchpad;
+
+

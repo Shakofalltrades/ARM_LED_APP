@@ -36,9 +36,8 @@ function App() {
 
   return (
     <div className="App">
-      <Header />
+      <Header setActivePage={setActivePage} />
       {content}
-      
     </div>
   );
 }

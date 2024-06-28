@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  AppBar,
   Box,
   Button,
   Container,
   CssBaseline,
   Paper,
   Grid,
-  Toolbar,
   Typography,
-  IconButton,
   Card,
   CardContent,
   CardActions,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import HomeIcon from '@mui/icons-material/Home';
 import './SensorMonitoring.css';
 
 const theme = createTheme({
@@ -114,12 +110,6 @@ function SensorMonitoring({ setActivePage }) {
     }
   };
 
-  const handleSendModeCommand = (command) => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ command }));
-    }
-  };
-
   const handleReset = () => {
     setNodes([]);
   };
@@ -127,16 +117,6 @@ function SensorMonitoring({ setActivePage }) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton edge="start" color="inherit" onClick={() => setActivePage('Home')}>
-            <HomeIcon />
-          </IconButton>
-          <Typography variant="h6" style={{ flexGrow: 1 }}>
-            Node Control
-          </Typography>
-        </Toolbar>
-      </AppBar>
       <Container maxWidth="lg">
         <Box my={4}>
           <Paper elevation={3}>
@@ -145,19 +125,20 @@ function SensorMonitoring({ setActivePage }) {
                 <Typography variant="h6" gutterBottom>
                   Sensor Animations
                 </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  style={{ marginBottom: '16px' }}
-                  onClick={() => handleSendModeCommand('s')}
-                >
-                  Sensor Mode
-                </Button>
                 <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
-                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('st')} style={{ marginRight: '8px' }}>
+                  <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    onClick={() => {handleSendCommand('st'); handleSendCommand('s'); }} 
+                    style={{ marginRight: '8px' }}
+                  >
                     Temperature
                   </Button>
-                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('sh')}>
+                  <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    onClick={() => { handleSendCommand('sh'); handleSendCommand('s'); }}
+                  >
                     Humidity
                   </Button>
                 </Box>
@@ -166,36 +147,18 @@ function SensorMonitoring({ setActivePage }) {
                 <Typography variant="h6" gutterBottom>
                   Default Animations
                 </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  style={{ marginBottom: '16px' }}
-                  onClick={() => handleSendModeCommand('a')}
-                >
-                  Animation Mode
-                </Button>
                 <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a1')} style={{ marginRight: '8px', marginTop: '8px' }}>
-                    Bird
-                  </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a2')} style={{ marginRight: '8px', marginTop: '8px' }}>
-                    Coin
-                  </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a3')} style={{ marginRight: '8px', marginTop: '8px' }}>
-                    Sword
-                  </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a4')} style={{ marginRight: '8px', marginTop: '8px' }}>
-                    Torch
-                  </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a5')} style={{ marginRight: '8px', marginTop: '8px' }}>
-                    Tank
-                  </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a6')} style={{ marginRight: '8px', marginTop: '8px' }}>
-                    Zombies
-                  </Button>
-                  <Button variant="contained" color="primary" onClick={() => handleGlobalCommand('a7')} style={{ marginTop: '8px' }}>
-                    ARM x Imperial
-                  </Button>
+                  {['Bird', 'Coin', 'Sword', 'Torch', 'Tank', 'Zombies', 'ARM x Imperial'].map((animation, index) => (
+                    <Button 
+                      key={index}
+                      variant="contained" 
+                      color="primary" 
+                      onClick={() => { handleSendCommand(`a${index + 1}`); handleSendCommand('a'); }} 
+                      style={{ marginRight: '8px', marginTop: '8px' }}
+                    >
+                      {animation}
+                    </Button>
+                  ))}
                 </Box>
               </Box>
               <Box mb={4}>
@@ -203,13 +166,27 @@ function SensorMonitoring({ setActivePage }) {
                   Controls
                 </Typography>
                 <Box display="flex" justifyContent="center" mb={2} flexWrap="wrap">
-                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('p')} style={{ marginRight: '8px' }}>
+                  <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    onClick={() => handleSendCommand('p')} 
+                    style={{ marginRight: '8px' }}
+                  >
                     Pause
                   </Button>
-                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('r')} style={{ marginRight: '8px' }}>
+                  <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    onClick={() => handleSendCommand('r')} 
+                    style={{ marginRight: '8px' }}
+                  >
                     Resume
                   </Button>
-                  <Button variant="contained" color="secondary" onClick={() => handleSendCommand('t')}>
+                  <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    onClick={() => handleSendCommand('t')}
+                  >
                     Next
                   </Button>
                 </Box>
@@ -236,11 +213,16 @@ function SensorMonitoring({ setActivePage }) {
                   </Typography>
                 </CardContent>
                 <CardActions>
-                  <Button size="small" color="primary" onClick={() => handleSendCommand('p', node.nodeId)}>Pause</Button>
-                  <Button size="small" color="primary" onClick={() => handleSendCommand('r', node.nodeId)}>Resume</Button>
-                  <Button size="small" color="primary" onClick={() => handleSendCommand('t', node.nodeId)}>Toggle</Button>
-                  <Button size="small" color="primary" onClick={() => handleSendCommand('s', node.nodeId)}>Sensor</Button>
-                  <Button size="small" color="primary" onClick={() => handleSendCommand('a', node.nodeId)}>Animate</Button>
+                  {['Pause', 'Resume', 'Toggle', 'Sensor', 'Animate'].map((action, actionIndex) => (
+                    <Button 
+                      size="small" 
+                      color="primary" 
+                      onClick={() => handleSendCommand(action.toLowerCase().charAt(0), node.nodeId)} 
+                      key={actionIndex}
+                    >
+                      {action}
+                    </Button>
+                  ))}
                 </CardActions>
               </Card>
             </Grid>
