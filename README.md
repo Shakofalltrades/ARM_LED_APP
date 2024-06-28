@@ -16,3 +16,9 @@ Prerequisites:
 2. React (18.2.0)
 3. MySQL (8.0.37)
     - Installation of Express and Multer maybe required
+
+### [Optional] Database
+Although the implementation to pull images from the database to the mesh network is not yet finished, animations created on the front-end can be stored in one. To do this, create a MySQL databse called `animations` and include the login details in the server.js file. 
+
+### Running the website
+To run the website
