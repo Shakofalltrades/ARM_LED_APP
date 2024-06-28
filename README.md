@@ -1,6 +1,6 @@
 # LUMNET - Server Code (ARM Wireless Mesh LEDs Project)
 ### Third-year Group Project
-This project deploys a mesh network (PainlessMesh) to connect nodes of Addressable LEDs to display animations across them in sync. A separate repository can be found [here]([https://github.com/Shakofalltrades/ARM_LED_APP](https://github.com/pb1n/LEDMeshProject) for the set up of the nodes and border-router.
+This project deploys a mesh network (PainlessMesh) to connect nodes of Addressable LEDs to display animations across them in sync. A separate repository can be found [here](https://github.com/pb1n/LEDMeshProject) for the set up of the nodes and border-router.
 
 #### Contributors (Server and Wesbite):
 - Tina Dionysiou
