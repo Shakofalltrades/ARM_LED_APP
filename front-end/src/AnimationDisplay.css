@@ -1,0 +1,44 @@
+.animation-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .animation-header {
+    background-color: #282c34;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+  }
+  
+  .animation-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    text-align: center;
+  }
+  
+  .animation-footer {
+    background-color: #282c34;
+    padding: 20px;
+    text-align: center;
+    color: white;
+  }  
+  .button {
+    background-color: #61dafb;
+    border: none;
+    color: black;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 10px;
+  }
+  
+  .button:hover {
+    background-color: #21a1f1;
+  }
+  
